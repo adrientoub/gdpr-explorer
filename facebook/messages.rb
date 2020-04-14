@@ -4,6 +4,7 @@ require 'json'
 require 'date'
 require_relative '../common/csv_exporter'
 require_relative '../common/dir_size'
+require_relative './fix_unicode'
 
 path = ARGV[0] || 'inbox'
 
@@ -28,7 +29,13 @@ children.each_with_index do |conversation_name, i|
     conversation_directory.each do |message_file|
       message_file_path = File.join(conversation_relative_path, message_file)
       if File.file?(message_file_path)
-        json = JSON.parse(File.read(message_file_path))
+        content = File.read(message_file_path)
+        begin
+          json = JSON.parse(FixUnicode.fix(content))
+        rescue
+          puts "cannot read #{message_file_path}, reading without fixing encoding"
+          json = JSON.parse(content)
+        end
 
         conv_raw[:title] = json['title']
         conv_raw[:participants] = json['participants'].map { |k| k['name'] }
