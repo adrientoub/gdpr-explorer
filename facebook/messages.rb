@@ -7,7 +7,7 @@ require_relative '../common/dir_size'
 require_relative './fix_unicode'
 
 path = ARGV[0] || 'inbox'
-STANDARD_OUTPUT = false
+STANDARD_OUTPUT = true
 
 conversations_raw = []
 
