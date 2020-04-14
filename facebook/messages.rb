@@ -79,11 +79,37 @@ conversations_raw.each do |conv_raw|
   exportable_data << [conv_raw[:title], conv_raw[:message_count]]
 end
 
-puts "Saving raw data to disk"
-
-File.open('messages_raw_data.json', 'w') do |file|
-  file.puts JSON.dump(conversations_raw)
-end
+puts "Export message count to CSV."
 File.open('message_count.csv', 'w') do |file|
   CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count))
+end
+
+messages_per_month = Hash.new
+
+conversations_raw.each do |conv_raw|
+  conv_raw[:message_per_day].each do |date, msg_count|
+    month_date = date[0..-4]
+    messages_per_month[month_date] ||= Hash.new(0)
+    messages_per_month[month_date][conv_raw[:title]] += msg_count
+  end
+end
+
+thread_list = conversations_raw.select { |c| c[:message_count] > 50 }.sort_by { |c| -c[:message_count] }.map { |c| c[:title] }
+puts "Keeping #{thread_list.count} threads for the per month graphs."
+
+File.open('message_per_month.json', 'w') do |file|
+  file.puts JSON.dump(messages_per_month)
+end
+File.open('message_per_month.csv', 'w') do |file|
+  file.puts "Date,#{thread_list.map { |m| m.gsub(',', ':') }.join(',')}"
+  lines = []
+
+  messages_per_month.each do |date, threads|
+    res = []
+    thread_list.each do |thread|
+      res << (threads[thread] || 0)
+    end
+    lines << "#{date},#{res.join(',')}"
+  end
+  file.puts lines.sort.join("\n")
 end
