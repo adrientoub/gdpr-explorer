@@ -7,6 +7,7 @@ require_relative '../common/dir_size'
 require_relative './fix_unicode'
 
 path = ARGV[0] || 'inbox'
+STANDARD_OUTPUT = false
 
 conversations_raw = []
 
@@ -71,9 +72,9 @@ puts "Loading done. Printing out data."
 conversations_raw.sort_by! { |conv_raw| -conv_raw[:message_count] }
 exportable_data = []
 conversations_raw.each do |conv_raw|
-  puts "#{conv_raw[:message_count]} - #{conv_raw[:title]}"
+  puts "#{conv_raw[:message_count]} - #{conv_raw[:title]}" if STANDARD_OUTPUT
   conv_raw[:count_per_participant].to_a.sort_by { |participant, count| -count }.each do |participant, count|
-    puts "  #{count} - #{participant}"
+    puts "  #{count} - #{participant}" if STANDARD_OUTPUT
   end
   exportable_data << [conv_raw[:title], conv_raw[:message_count]]
 end
