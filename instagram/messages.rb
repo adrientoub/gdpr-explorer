@@ -4,6 +4,8 @@ require 'json'
 require 'date'
 require_relative '../common/csv_exporter'
 
+DELIMITER = ','
+
 filename = ARGV[0] || 'messages.json'
 username = ARGV[1] || 'adrientoub'
 
@@ -50,5 +52,5 @@ sorted_data.each do |conversation_name, stats|
   exportable_data << [conversation_name, count, ratio]
 end
 File.open('message_count.csv', 'w') do |file|
-  CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count ratio))
+  CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count ratio), DELIMITER)
 end

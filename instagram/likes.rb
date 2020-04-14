@@ -4,6 +4,8 @@ require 'json'
 require 'date'
 require_relative '../common/csv_exporter'
 
+DELIMITER = ','
+
 filename = ARGV[0] || 'likes.json'
 
 json = JSON.parse(File.read(filename))
@@ -47,7 +49,7 @@ File.open('like_count.json', 'w') do |file|
   file.puts JSON.dump(like_count)
 end
 File.open("like_count.csv", 'w') do |file|
-  CsvExporter.export_csv(file, like_count, %w(username count))
+  CsvExporter.export_csv(file, like_count, %w(username count), DELIMITER)
 end
 
 # sort from most liked to least liked
@@ -65,6 +67,6 @@ likes_per_year_sorted.each do |year, like_count_for_year|
     file.puts JSON.dump(like_count_for_year_sorted)
   end
   File.open("like_count_#{year}.csv", 'w') do |file|
-    CsvExporter.export_csv(file, like_count_for_year_sorted, %w(username count))
+    CsvExporter.export_csv(file, like_count_for_year_sorted, %w(username count), DELIMITER)
   end
 end

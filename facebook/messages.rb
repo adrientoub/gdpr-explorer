@@ -9,7 +9,8 @@ require_relative './fix_unicode'
 FORCE_RELOAD = false
 STANDARD_OUTPUT = true
 CACHE_PATH = 'messages_raw_data.json'
-CURRENT_VERSION = '0.0.1'
+CURRENT_VERSION = '0.0.2'
+DELIMITER = ','
 
 def load_and_parse(cache_filename, archive_path)
   conversations_raw = []
@@ -55,7 +56,7 @@ def load_and_parse(cache_filename, archive_path)
             date = datetime[0...10]
             hour = datetime[11..12]
             conv_raw[:message_per_day][date] += 1
-            conv_raw[:message_per_hour][hour] += 1
+            conv_raw[:message_per_hour]["h#{hour}".to_sym] += 1
           end
         end
       end
@@ -102,7 +103,7 @@ end
 
 puts "Export message count to CSV."
 File.open('message_count.csv', 'w') do |file|
-  CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count))
+  CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count), DELIMITER)
 end
 
 messages_per_month = Hash.new
@@ -122,7 +123,7 @@ File.open('message_per_month.json', 'w') do |file|
   file.puts JSON.dump(messages_per_month)
 end
 File.open('message_per_month.csv', 'w') do |file|
-  file.puts "Date,#{thread_list.map { |m| m.gsub(',', ':') }.join(',')}"
+  file.puts "Date#{DELIMITER}#{thread_list.map { |thread_name| CsvExporter.sanitize_data(thread_name, DELIMITER) }.join(DELIMITER)}"
   lines = []
 
   messages_per_month.each do |date, threads|
@@ -130,32 +131,24 @@ File.open('message_per_month.csv', 'w') do |file|
     thread_list.each do |thread|
       res << (threads[thread] || 0)
     end
-    lines << "#{date},#{res.join(',')}"
+    lines << "#{date}#{DELIMITER}#{res.join(DELIMITER)}"
   end
   file.puts lines.sort.join("\n")
 end
 
-messages_per_hour = Hash.new
-conversations_raw.each do |conv_raw|
-  conv_raw[:message_per_hour].each do |hour, msg_count|
-    messages_per_hour[hour] ||= Hash.new(0)
-    messages_per_hour[hour][conv_raw[:title]] += msg_count
-  end
-end
-
-File.open('message_per_hour.json', 'w') do |file|
-  file.puts JSON.dump(messages_per_hour)
-end
+hours = (0..23).to_a
+hours_usable = hours.map { |hour| "h#{hour.to_s.rjust(2, '0')}".to_sym }.to_a
 File.open('message_per_hour.csv', 'w') do |file|
-  file.puts "Hour,#{thread_list.map { |m| m.gsub(',', ':') }.join(',')}"
+  file.puts "Thread name#{DELIMITER}#{hours.join(DELIMITER)}"
   lines = []
 
-  messages_per_hour.each do |hour, threads|
+  conversations_raw.each do |conv_raw|
+    next unless conv_raw[:message_count] > 50
+
     res = []
-    thread_list.each do |thread|
-      res << (threads[thread] || 0)
+    hours_usable.each do |hour|
+      res << (conv_raw[:message_per_hour][hour] || 0)
     end
-    lines << "#{hour},#{res.join(',')}"
+    file.puts "#{CsvExporter.sanitize_data(conv_raw[:title], DELIMITER)}#{DELIMITER}#{res.join(DELIMITER)}"
   end
-  file.puts lines.sort.join("\n")
 end
