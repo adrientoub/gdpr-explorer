@@ -6,30 +6,32 @@ require_relative '../common/csv_exporter'
 require_relative '../common/dir_size'
 require_relative './fix_unicode'
 
-path = ARGV[0] || 'inbox'
+FORCE_RELOAD = false
 STANDARD_OUTPUT = true
+CACHE_PATH = 'messages_raw_data.json'
+CURRENT_VERSION = '0.0.1'
 
-conversations_raw = []
-
-# find all conversations
-if File.exists?('messages_raw_data.json')
-  puts "Loading raw data from disk conversations"
-  conversations_raw = JSON.parse(File.read('messages_raw_data.json'), symbolize_names: true)
-else
-  children = Dir.children(path)
+def load_and_parse(cache_filename, archive_path)
+  conversations_raw = []
+  raw_payload = {
+    version: CURRENT_VERSION,
+    conversations: conversations_raw
+  }
+  children = Dir.children(archive_path)
   puts "Loading #{children.count} conversations"
 
   children.each_with_index do |conversation_name, i|
     puts "  Done #{i}/#{children.count}" if i % 25 == 0
 
-    conversation_relative_path = File.join(path, conversation_name)
+    conversation_relative_path = File.join(archive_path, conversation_name)
 
     if File.directory?(conversation_relative_path)
       conversation_directory = Dir.new(conversation_relative_path)
       conv_raw = {
         message_count: 0,
         count_per_participant: {},
-        message_per_day: {}
+        message_per_day: Hash.new(0),
+        message_per_hour: Hash.new(0)
       }
       conv_raw[:size] = DirSize.all_file_sizes(conversation_relative_path)
       conversation_directory.each do |message_file|
@@ -49,9 +51,11 @@ else
             conv_raw[:message_count] += 1
             conv_raw[:count_per_participant][message['sender_name']] ||= 0
             conv_raw[:count_per_participant][message['sender_name']] += 1
-            date = Time.at(message['timestamp_ms'] / 1000).to_date.to_s
-            conv_raw[:message_per_day][date] ||= 0
+            datetime = Time.at(message['timestamp_ms'] / 1000).to_datetime.to_s
+            date = datetime[0...10]
+            hour = datetime[11..12]
             conv_raw[:message_per_day][date] += 1
+            conv_raw[:message_per_hour][hour] += 1
           end
         end
       end
@@ -61,10 +65,27 @@ else
 
   puts "Saving raw data to disk"
 
-  File.open('messages_raw_data.json', 'w') do |file|
-    file.puts JSON.dump(conversations_raw)
+  File.open(cache_filename, 'w') do |file|
+    file.puts JSON.dump(raw_payload)
   end
+
+  raw_payload
 end
+
+path = ARGV[0] || 'inbox'
+
+# find all conversations
+if File.exists?(CACHE_PATH) && !FORCE_RELOAD
+  puts "Loading raw data from disk conversations"
+  raw_payload = JSON.parse(File.read(CACHE_PATH), symbolize_names: true)
+  unless raw_payload.is_a?(Hash) && raw_payload[:version] == CURRENT_VERSION
+    puts "Outdated data: reparsing"
+    raw_payload = load_and_parse(CACHE_PATH, path)
+  end
+else
+  raw_payload = load_and_parse(CACHE_PATH, path)
+end
+conversations_raw = raw_payload[:conversations]
 
 puts "Loading done. Printing out data."
 
@@ -95,7 +116,7 @@ conversations_raw.each do |conv_raw|
 end
 
 thread_list = conversations_raw.select { |c| c[:message_count] > 50 }.sort_by { |c| -c[:message_count] }.map { |c| c[:title] }
-puts "Keeping #{thread_list.count} threads for the per month graphs."
+puts "Keeping #{thread_list.count} threads for the per month/hour graphs."
 
 File.open('message_per_month.json', 'w') do |file|
   file.puts JSON.dump(messages_per_month)
@@ -110,6 +131,31 @@ File.open('message_per_month.csv', 'w') do |file|
       res << (threads[thread] || 0)
     end
     lines << "#{date},#{res.join(',')}"
+  end
+  file.puts lines.sort.join("\n")
+end
+
+messages_per_hour = Hash.new
+conversations_raw.each do |conv_raw|
+  conv_raw[:message_per_hour].each do |hour, msg_count|
+    messages_per_hour[hour] ||= Hash.new(0)
+    messages_per_hour[hour][conv_raw[:title]] += msg_count
+  end
+end
+
+File.open('message_per_hour.json', 'w') do |file|
+  file.puts JSON.dump(messages_per_hour)
+end
+File.open('message_per_hour.csv', 'w') do |file|
+  file.puts "Hour,#{thread_list.map { |m| m.gsub(',', ':') }.join(',')}"
+  lines = []
+
+  messages_per_hour.each do |hour, threads|
+    res = []
+    thread_list.each do |thread|
+      res << (threads[thread] || 0)
+    end
+    lines << "#{hour},#{res.join(',')}"
   end
   file.puts lines.sort.join("\n")
 end
