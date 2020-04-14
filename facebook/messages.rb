@@ -11,42 +11,57 @@ path = ARGV[0] || 'inbox'
 conversations_raw = []
 
 # find all conversations
-children = Dir.children(path)
-puts "Loading #{children.count} conversations"
+if File.exists?('messages_raw_data.json')
+  puts "Loading raw data from disk conversations"
+  conversations_raw = JSON.parse(File.read('messages_raw_data.json'), symbolize_names: true)
+else
+  children = Dir.children(path)
+  puts "Loading #{children.count} conversations"
 
-children.each_with_index do |conversation_name, i|
-  puts "  Done #{i}/#{children.count}" if i % 25 == 0
+  children.each_with_index do |conversation_name, i|
+    puts "  Done #{i}/#{children.count}" if i % 25 == 0
 
-  conversation_relative_path = File.join(path, conversation_name)
+    conversation_relative_path = File.join(path, conversation_name)
 
-  if File.directory?(conversation_relative_path)
-    conversation_directory = Dir.new(conversation_relative_path)
-    conv_raw = {
-      message_count: 0,
-      count_per_participant: {}
-    }
-    conv_raw[:size] = DirSize.all_file_sizes(conversation_relative_path)
-    conversation_directory.each do |message_file|
-      message_file_path = File.join(conversation_relative_path, message_file)
-      if File.file?(message_file_path)
-        content = File.read(message_file_path)
-        begin
-          json = JSON.parse(FixUnicode.fix(content))
-        rescue
-          puts "cannot read #{message_file_path}, reading without fixing encoding"
-          json = JSON.parse(content)
-        end
+    if File.directory?(conversation_relative_path)
+      conversation_directory = Dir.new(conversation_relative_path)
+      conv_raw = {
+        message_count: 0,
+        count_per_participant: {},
+        message_per_day: {}
+      }
+      conv_raw[:size] = DirSize.all_file_sizes(conversation_relative_path)
+      conversation_directory.each do |message_file|
+        message_file_path = File.join(conversation_relative_path, message_file)
+        if File.file?(message_file_path)
+          content = File.read(message_file_path)
+          begin
+            json = JSON.parse(FixUnicode.fix(content))
+          rescue
+            puts "cannot read #{message_file_path}, reading without fixing encoding"
+            json = JSON.parse(content)
+          end
 
-        conv_raw[:title] = json['title']
-        conv_raw[:participants] = json['participants'].map { |k| k['name'] }
-        json['messages'].each do |message|
-          conv_raw[:message_count] += 1
-          conv_raw[:count_per_participant][message['sender_name']] ||= 0
-          conv_raw[:count_per_participant][message['sender_name']] += 1
+          conv_raw[:title] = json['title']
+          conv_raw[:participants] = json['participants'].map { |k| k['name'] }
+          json['messages'].each do |message|
+            conv_raw[:message_count] += 1
+            conv_raw[:count_per_participant][message['sender_name']] ||= 0
+            conv_raw[:count_per_participant][message['sender_name']] += 1
+            date = Time.at(message['timestamp_ms'] / 1000).to_date.to_s
+            conv_raw[:message_per_day][date] ||= 0
+            conv_raw[:message_per_day][date] += 1
+          end
         end
       end
+      conversations_raw << conv_raw
     end
-    conversations_raw << conv_raw
+  end
+
+  puts "Saving raw data to disk"
+
+  File.open('messages_raw_data.json', 'w') do |file|
+    file.puts JSON.dump(conversations_raw)
   end
 end
 
