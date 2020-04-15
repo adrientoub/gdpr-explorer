@@ -9,7 +9,7 @@ require_relative './fix_unicode'
 FORCE_RELOAD = false
 STANDARD_OUTPUT = true
 CACHE_PATH = 'messages_raw_data.json'
-CURRENT_VERSION = '0.0.2'
+CURRENT_VERSION = '0.0.3'
 DELIMITER = ','
 
 def load_and_parse(cache_filename, archive_path)
@@ -30,7 +30,9 @@ def load_and_parse(cache_filename, archive_path)
       conversation_directory = Dir.new(conversation_relative_path)
       conv_raw = {
         message_count: 0,
-        count_per_participant: {},
+        reaction_count: 0,
+        message_per_participant: Hash.new(0),
+        reaction_per_participant: Hash.new(0),
         message_per_day: Hash.new(0),
         message_per_hour: Hash.new(0)
       }
@@ -50,8 +52,11 @@ def load_and_parse(cache_filename, archive_path)
           conv_raw[:participants] = json['participants'].map { |k| k['name'] }
           json['messages'].each do |message|
             conv_raw[:message_count] += 1
-            conv_raw[:count_per_participant][message['sender_name']] ||= 0
-            conv_raw[:count_per_participant][message['sender_name']] += 1
+            conv_raw[:message_per_participant][message['sender_name']] += 1
+            message['reactions']&.each do |reaction|
+              conv_raw[:reaction_count] += 1
+              conv_raw[:reaction_per_participant][reaction['actor'].to_sym] += 1
+            end
             datetime = Time.at(message['timestamp_ms'] / 1000).to_datetime.to_s
             date = datetime[0...10]
             hour = datetime[11..12]
@@ -94,9 +99,9 @@ puts "Loading done. Printing out data."
 conversations_raw.sort_by! { |conv_raw| -conv_raw[:message_count] }
 exportable_data = []
 conversations_raw.each do |conv_raw|
-  puts "#{conv_raw[:message_count]} - #{conv_raw[:title]}" if STANDARD_OUTPUT
-  conv_raw[:count_per_participant].to_a.sort_by { |participant, count| -count }.each do |participant, count|
-    puts "  #{count} - #{participant}" if STANDARD_OUTPUT
+  puts "#{conv_raw[:message_count]} - #{conv_raw[:title]} (#{conv_raw[:reaction_count] || 0} reactions)" if STANDARD_OUTPUT
+  conv_raw[:message_per_participant].to_a.sort_by { |participant, count| -count }.each do |participant, count|
+    puts "  #{count} - #{participant} (#{conv_raw[:reaction_per_participant][participant.to_sym] || 0} reactions)" if STANDARD_OUTPUT
   end
   exportable_data << [conv_raw[:title], conv_raw[:message_count]]
 end
