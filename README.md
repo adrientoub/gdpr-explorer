@@ -22,3 +22,24 @@ Follow this [guide](https://www.facebook.com/help/1701730696756992?helpref=hc_gl
 ### Instagram
 
 Follow this [guide](https://help.instagram.com/181231772500920). It usually takes a few hours to get the archive.
+
+## Requirements
+
+* Ruby 2.5 or more recent
+
+## Usage
+
+1. Clone this repository locally.
+2. Launch the script you want.
+
+```
+Usage: ruby launch_facebook_messenger.rb [path_to_inbox] [output_directory]
+  'path_to_inbox' is the path to the Facebook Archive folder named 'messages/inbox'
+  'output_directory' is the directory where you want the script to output its work
+```
+
+```
+Usage: ruby launch_instagram_messages.rb [path_to_messages] [output_directory]
+  'path_to_messages' is the path to the Instagram file named 'messages.json'
+  'output_directory' is the directory where you want the script to output its work```
+```

@@ -7,6 +7,7 @@ def print_help
   puts "Usage: #{__FILE__ } [path_to_messages] [output_directory]"
   puts "  'path_to_messages' is the path to the Instagram file named 'messages.json'"
   puts "  'output_directory' is the directory where you want the script to output its work"
+  exit 1
 end
 
 if ARGV.length < 2
