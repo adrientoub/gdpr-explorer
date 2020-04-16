@@ -13,6 +13,7 @@ class MessagesAnalyse
     sort!(conversations_raw)
 
     export_message_count(conversations_raw, output_path)
+    export_messages_per_month(conversations_raw, output_path)
   end
 
   private
@@ -96,6 +97,45 @@ class MessagesAnalyse
     puts "Export message count to CSV."
     File.open(File.join(output_path, 'message_count.csv'), 'w') do |file|
       CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count), DELIMITER)
+    end
+  end
+
+  def self.export_messages_per_month(conversations_raw, output_path)
+    messages_per_month = Hash.new
+
+    conversations_raw.each do |conv_raw|
+      conv_raw['message_per_day'].each do |date, msg_count|
+        month_date = date[0..-4]
+        messages_per_month[month_date] ||= Hash.new(0)
+        messages_per_month[month_date][conv_raw['title']] += msg_count
+      end
+    end
+
+    # Keep only conversations with more than 50 messages
+    thread_list = conversations_raw.select do |c|
+      c['message_count'] > 50
+    end.sort_by do |c|
+      -c['message_count']
+    end.map do |c|
+      c['title']
+    end
+    puts "Keeping #{thread_list.count} threads for the per month graph."
+
+    File.open(File.join(output_path, 'message_per_month.json'), 'w') do |file|
+      file.puts JSON.dump(messages_per_month)
+    end
+    File.open(File.join(output_path, 'message_per_month.csv'), 'w') do |file|
+      file.puts "Date#{DELIMITER}#{thread_list.map { |thread_name| CsvExporter.sanitize_data(thread_name, DELIMITER) }.join(DELIMITER)}"
+      lines = []
+
+      messages_per_month.each do |date, threads|
+        res = []
+        thread_list.each do |thread|
+          res << (threads[thread] || 0)
+        end
+        lines << "#{date}#{DELIMITER}#{res.join(DELIMITER)}"
+      end
+      file.puts lines.sort.join("\n")
     end
   end
 end
