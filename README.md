@@ -10,6 +10,7 @@ Currently supports:
 - Instagram likes
 - Instagram messages
 - Facebook Messenger messages
+- Twitter Direct Messages
 
 ## How to get your data
 
@@ -51,4 +52,10 @@ Usage: ruby launch_facebook_messenger.rb [path_to_inbox] [output_directory]
 Usage: ruby launch_instagram_messages.rb [path_to_messages] [output_directory]
   'path_to_messages' is the path to the Instagram file named 'messages.json'
   'output_directory' is the directory where you want the script to output its work```
+```
+
+```
+Usage: ruby launch_twitter_dm.rb [path_to_dms] [output_directory]
+  'path_to_dms' is the path to the Twitter file named 'direct-messages.js'
+  'output_directory' is the directory where you want the script to output its work
 ```
