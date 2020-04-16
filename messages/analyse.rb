@@ -14,6 +14,7 @@ class MessagesAnalyse
 
     export_message_count(conversations_raw, output_path)
     export_messages_per_month(conversations_raw, output_path)
+    export_messages_per_hour(conversations_raw, output_path)
   end
 
   private
@@ -136,6 +137,25 @@ class MessagesAnalyse
         lines << "#{date}#{DELIMITER}#{res.join(DELIMITER)}"
       end
       file.puts lines.sort.join("\n")
+    end
+  end
+
+  def self.export_messages_per_hour(conversations_raw, output_path)
+    hours = (0..23).to_a
+    hours_usable = hours.map { |hour| "h#{hour.to_s.rjust(2, '0')}" }.to_a
+    File.open(File.join(output_path, 'message_per_hour.csv'), 'w') do |file|
+      file.puts "Thread name#{DELIMITER}#{hours.join(DELIMITER)}"
+      lines = []
+
+      conversations_raw.each do |conv_raw|
+        next unless conv_raw['message_count'] > 50
+
+        res = []
+        hours_usable.each do |hour|
+          res << (conv_raw['message_per_hour'][hour] || 0)
+        end
+        file.puts "#{CsvExporter.sanitize_data(conv_raw['title'], DELIMITER)}#{DELIMITER}#{res.join(DELIMITER)}"
+      end
     end
   end
 end
