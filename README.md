@@ -29,6 +29,7 @@ Follow this [guide](https://help.twitter.com/en/managing-your-account/accessing-
 
 ### Snapchat
 
+Follow this [guide](https://support.snapchat.com/en-US/a/download-my-data).
 It usually takes a few minutes to get the archive.
 
 ## Requirements
