@@ -3,6 +3,8 @@ require 'date'
 
 CURRENT_VERSION = '0.0.3'
 INDEX_PATH = 'index.json'
+STANDARD_OUTPUT = true
+DELIMITER = ';'
 
 class Index
   attr_accessor :version, :conversations
@@ -10,7 +12,7 @@ class Index
   def self.from_json(json)
     index = new
     index.version = json['version']
-    index.conversations = json['conversations'].map do |conversation|
+    index.conversations = json['conversations']&.map do |conversation|
       ConversationIndex.from_json(conversation)
     end
     index
@@ -28,8 +30,8 @@ class ConversationIndex
     conversation
   end
 
-  def load_conversation
-    content = File.read(self.path)
+  def load_conversation(output_path)
+    content = File.read(File.join(output_path, self.path))
     json = JSON.parse(content)
     ConversationFile.from_json(json)
   end

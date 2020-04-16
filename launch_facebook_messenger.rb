@@ -2,6 +2,7 @@
 
 require_relative './common/types'
 require_relative './facebook/parser'
+require_relative './messages/analyse'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_inbox] [output_directory]"
@@ -27,3 +28,5 @@ if File.exists?(index_path)
   end
 end
 index ||= FacebookParser.parse(path_to_inbox, output_directory)
+
+MessagesAnalyse.analyse(index, output_directory)

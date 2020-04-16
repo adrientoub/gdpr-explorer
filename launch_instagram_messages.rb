@@ -2,6 +2,7 @@
 
 require_relative './common/types'
 require_relative './instagram/parser'
+require_relative './messages/analyse'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_messages] [output_directory]"
@@ -27,3 +28,5 @@ if File.exists?(index_path)
   end
 end
 index ||= InstagramParser.parse(path_to_messages, output_directory)
+
+MessagesAnalyse.analyse(index, output_directory)
