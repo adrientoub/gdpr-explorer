@@ -23,6 +23,14 @@ Follow this [guide](https://www.facebook.com/help/1701730696756992?helpref=hc_gl
 
 Follow this [guide](https://help.instagram.com/181231772500920). It usually takes a few hours to get the archive.
 
+### Twitter
+
+Follow this [guide](https://help.twitter.com/en/managing-your-account/accessing-your-twitter-data). It usually takes a few hours to get the archive.
+
+### Snapchat
+
+It usually takes a few minutes to get the archive.
+
 ## Requirements
 
 * Ruby 2.5 or more recent

@@ -1,9 +1,8 @@
 require 'json'
 require 'date'
 
-CURRENT_VERSION = '0.0.3'
+CURRENT_VERSION = '0.0.4'
 INDEX_PATH = 'index.json'
-STANDARD_OUTPUT = true
 DELIMITER = ';'
 
 class Index

@@ -49,7 +49,7 @@ class MessagesAnalyse
         'message_count' => 0,
         'reaction_count' => 0,
         'message_per_participant' => Hash.new(0),
-        'reaction_per_participant' => Hash.new(0),
+        'reaction_per_participant' => {},
         'message_per_day' => Hash.new(0),
         'message_per_hour' => Hash.new(0)
       }
@@ -60,7 +60,9 @@ class MessagesAnalyse
         conv_raw_metadata['message_per_participant'][message.sender] += 1
         message.reactions&.each do |reaction|
           conv_raw_metadata['reaction_count'] += 1
-          conv_raw_metadata['reaction_per_participant'][reaction.sender] += 1
+          conv_raw_metadata['reaction_per_participant'][reaction.sender] ||= Hash.new(0)
+          conv_raw_metadata['reaction_per_participant'][reaction.sender]['total_count'] += 1
+          conv_raw_metadata['reaction_per_participant'][reaction.sender][reaction.reaction] += 1
         end
         datetime = message.date.to_s
         date = datetime[0...10]
@@ -86,12 +88,27 @@ class MessagesAnalyse
 
   def self.export_message_count(conversations_raw, output_path)
     exportable_data = []
-    conversations_raw.each do |conv_raw|
-      puts "#{conv_raw['message_count']} - #{conv_raw['title']} (#{conv_raw['reaction_count'] || 0} reactions)" if STANDARD_OUTPUT
-      conv_raw['message_per_participant'].to_a.sort_by { |participant, count| -count }.each do |participant, count|
-        puts "  #{count} - #{participant} (#{conv_raw['reaction_per_participant'][participant] || 0} reactions)" if STANDARD_OUTPUT
+    File.open(File.join(output_path, 'message_count.txt'), 'w') do |file|
+      conversations_raw.each do |conv_raw|
+        file.puts "#{conv_raw['message_count']} messages - #{conv_raw['title']} (#{conv_raw['reaction_count'] || 0} reactions)"
+        reaction_per_participant = conv_raw['reaction_per_participant']
+        conv_raw['message_per_participant'].to_a.sort_by { |participant, count| -count }.each do |participant, message_count|
+          different_reaction_count = reaction_per_participant[participant]&.count
+          if !different_reaction_count.nil? && different_reaction_count > 2
+            file.puts "  #{message_count} messages - #{participant}"
+            reaction_per_participant[participant].sort_by { |r, c| -c }.each do |reaction, count|
+              if reaction == 'total_count'
+                file.puts "    Total reaction count #{count}"
+              else
+                file.puts "    #{reaction} #{count}"
+              end
+            end
+          else
+            file.puts "  #{message_count} messages - #{participant} (#{reaction_per_participant.dig(participant, 'total_count') || 0} reactions)"
+          end
+        end
+        exportable_data << [conv_raw['title'], conv_raw['message_count']]
       end
-      exportable_data << [conv_raw['title'], conv_raw['message_count']]
     end
 
     puts "Export message count to CSV."
