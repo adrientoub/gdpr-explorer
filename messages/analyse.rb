@@ -14,6 +14,7 @@ class MessagesAnalyse
     export_message_count(conversations_raw, output_path)
     export_messages_per_month(conversations_raw, output_path)
     export_messages_per_hour(conversations_raw, output_path)
+    export_messages_per_day_of_week(conversations_raw, output_path)
   end
 
   private
@@ -171,6 +172,44 @@ class MessagesAnalyse
           res << (conv_raw['message_per_hour'][hour] || 0)
         end
         file.puts "#{CsvExporter.sanitize_data(conv_raw['title'], DELIMITER)}#{DELIMITER}#{res.join(DELIMITER)}"
+      end
+    end
+  end
+
+  def self.export_messages_per_day_of_week(conversations_raw, output_path)
+    messages_per_day_of_week = Array.new(7) { Hash.new(0) }
+
+    conversations_raw.each do |conv_raw|
+      conv_raw['message_per_day'].each do |date, msg_count|
+        day_of_week = Date.parse(date).wday
+        messages_per_day_of_week[day_of_week][conv_raw['title']] += msg_count
+      end
+    end
+
+    # Keep only conversations with more than 50 messages
+    thread_list = conversations_raw.select do |c|
+      c['message_count'] > 50
+    end.sort_by do |c|
+      -c['message_count']
+    end.map do |c|
+      c['title']
+    end
+    puts "Keeping #{thread_list.count} threads for the day of the week graph."
+
+    File.open(File.join(output_path, 'message_per_day_of_week.json'), 'w') do |file|
+      file.puts JSON.dump(messages_per_day_of_week)
+    end
+    days = %w(Sunday Monday Tuesday Wednesday Thursday Friday Saturday)
+    File.open(File.join(output_path, 'message_per_day_of_week.csv'), 'w') do |file|
+      file.puts "Date#{DELIMITER}#{thread_list.map { |thread_name| CsvExporter.sanitize_data(thread_name, DELIMITER) }.join(DELIMITER)}"
+      lines = []
+
+      messages_per_day_of_week.each_with_index do |threads, day|
+        res = []
+        thread_list.each do |thread|
+          res << (threads[thread] || 0)
+        end
+        file.puts "#{days[day]}#{DELIMITER}#{res.join(DELIMITER)}"
       end
     end
   end
