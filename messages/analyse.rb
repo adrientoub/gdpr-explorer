@@ -1,5 +1,4 @@
 require 'json'
-require 'awesome_print'
 require_relative '../common/types'
 require_relative '../common/csv_exporter'
 
