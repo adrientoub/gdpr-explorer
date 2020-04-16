@@ -2,6 +2,7 @@ require 'json'
 require 'date'
 
 CURRENT_VERSION = '0.0.3'
+INDEX_PATH = 'index.json'
 
 class Index
   attr_accessor :version, :conversations

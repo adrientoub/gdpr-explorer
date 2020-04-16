@@ -7,8 +7,6 @@ require_relative '../common/types'
 
 filename = ARGV[0] || 'messages.json'
 
-INDEX_PATH = 'index.json'
-
 json = JSON.parse(File.read(filename))
 puts "Parsed json #{filename}"
 
