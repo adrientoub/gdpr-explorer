@@ -19,8 +19,8 @@ class InstagramParser
 
     conversations_index = []
     index = {
-      version: CURRENT_VERSION,
-      conversations: conversations_index
+      'version' => CURRENT_VERSION,
+      'conversations' => conversations_index
     }
 
     json.each do |conversation|
@@ -28,17 +28,17 @@ class InstagramParser
       output_conversation_path = "conversations/#{conversation_name}.json"
 
       conv_raw = {
-        conversation_name: conversation_name,
-        participants: conversation['participants'],
-        messages: conversation['conversation'].map do |message|
+        'conversation_name' => conversation_name,
+        'participants' => conversation['participants'],
+        'messages' => conversation['conversation'].map do |message|
           {
-            sender: message['sender'],
-            date: message['created_at'],
-            content: message['text'],
-            reactions: message['likes']&.map do |like|
+            'sender' => message['sender'],
+            'date' => message['created_at'],
+            'content' => message['text'],
+            'reactions' => message['likes']&.map do |like|
               {
-                sender: like['username'],
-                reaction: 'like'
+                'sender' => like['username'],
+                'reaction' => 'like'
               }
             end
           }
@@ -49,14 +49,14 @@ class InstagramParser
       end
 
       index_conv = {
-        conversation_name: conversation_name,
-        path: output_conversation_path,
-        message_count: conv_raw[:messages].count
+        'conversation_name' => conversation_name,
+        'path' => output_conversation_path,
+        'message_count' => conv_raw['messages'].count
       }
       conversations_index << index_conv
     end
     conversations_index.sort_by! do |conversation|
-      conversation[:message_count]
+      conversation['message_count']
     end.reverse!
 
     File.open(index_path, 'w') do |file|
