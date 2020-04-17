@@ -146,15 +146,23 @@ class MessagesAnalyse
       file.puts "Date#{DELIMITER}#{thread_list.map { |thread_name| CsvExporter.sanitize_data(thread_name, DELIMITER) }.join(DELIMITER)}"
       lines = []
 
-      messages_per_month.each do |date, threads|
+      dates = messages_per_month.keys.sort
+      generate_all_months(dates[0], dates[-1]).each do |date|
+        threads = messages_per_month[date] || {}
         res = []
         thread_list.each do |thread|
           res << (threads[thread] || 0)
         end
-        lines << "#{date}#{DELIMITER}#{res.join(DELIMITER)}"
+        file.puts "#{date}#{DELIMITER}#{res.join(DELIMITER)}"
       end
-      file.puts lines.sort.join("\n")
     end
+  end
+
+  # from and to are in the form '2020-04'
+  def self.generate_all_months(from, to)
+    (Date.parse("#{from}-01")..Date.parse("#{to}-01")).map do |date|
+      date.to_s[0..6]
+    end.uniq
   end
 
   def self.export_messages_per_hour(conversations_raw, output_path)

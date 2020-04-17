@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 
-CURRENT_VERSION = '0.0.4'
+CURRENT_VERSION = '0.0.5'
 INDEX_PATH = 'index.json'
 DELIMITER = ';'
 
