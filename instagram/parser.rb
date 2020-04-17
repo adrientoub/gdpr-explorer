@@ -22,39 +22,48 @@ class InstagramParser
       'version' => CURRENT_VERSION,
       'conversations' => conversations_index
     }
+    conversations_raw = Hash.new { Hash.new }
 
     json.each do |conversation|
       conversation_name = conversation['participants'].sort.join('-')
-      output_conversation_path = "conversations/#{conversation_name}.json"
 
-      conv_raw = {
-        'conversation_name' => conversation_name,
-        'participants' => conversation['participants'],
-        'messages' => conversation['conversation'].map do |message|
-          {
-            'sender' => message['sender'],
-            'date' => message['created_at'],
-            'content' => message['text'],
-            'reactions' => message['likes']&.map do |like|
-              {
-                'sender' => like['username'],
-                'reaction' => 'like'
-              }
-            end
-          }
-        end
-      }
+      # Do this to allow conversations that are split in 2 different Hash
+      conv_raw = conversations_raw[conversation_name]
+      conversations_raw[conversation_name] = conv_raw
+
+      messages = conv_raw['messages'] || []
+      conversation['conversation'].each do |message|
+        messages << {
+          'sender' => message['sender'],
+          'date' => message['created_at'],
+          'content' => message['text'],
+          'reactions' => message['likes']&.map do |like|
+            {
+              'sender' => like['username'],
+              'reaction' => 'like'
+            }
+          end
+        }
+      end
+      conv_raw['conversation_name'] ||= conversation_name
+      conv_raw['participants'] ||= conversation['participants']
+      conv_raw['messages'] = messages
+    end
+
+    # Dump all conversations to disk
+    conversations_raw.each do |conversation_name, conv_raw|
+      output_conversation_path = "conversations/#{conversation_name}.json"
       File.open(File.join(output_directory, output_conversation_path), 'w') do |file|
         file.puts JSON.dump(conv_raw)
       end
 
-      index_conv = {
+      conversations_index << {
         'conversation_name' => conversation_name,
         'path' => output_conversation_path,
         'message_count' => conv_raw['messages'].count
       }
-      conversations_index << index_conv
     end
+
     conversations_index.sort_by! do |conversation|
       conversation['message_count']
     end.reverse!
