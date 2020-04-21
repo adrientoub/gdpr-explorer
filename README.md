@@ -33,6 +33,10 @@ Follow this [guide](https://help.twitter.com/en/managing-your-account/accessing-
 Follow this [guide](https://support.snapchat.com/en-US/a/download-my-data).
 It usually takes a few minutes to get the archive.
 
+### Apple
+
+Go to [guide](https://privacy.apple.com/). Connect with your Apple Account and answer your security questions. You will then have the ability to request an archive of your data. It usually takes a few days to get the archive.
+
 ## Requirements
 
 * Ruby 2.5 or more recent
