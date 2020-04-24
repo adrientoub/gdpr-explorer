@@ -37,6 +37,10 @@ It usually takes a few minutes to get the archive.
 
 Go to [guide](https://privacy.apple.com/). Connect with your Apple Account and answer your security questions. You will then have the ability to request an archive of your data. It usually takes a few days to get the archive.
 
+### YouTube
+
+Go to [Google Takeout](https://takeout.google.com/settings/takeout). Select YouTube and YouTube Music, click on "Multiple formats" and pick JSON in the format selector. It usually takes a few minutes to get the archive.
+
 ## Requirements
 
 * Ruby 2.5 or more recent
