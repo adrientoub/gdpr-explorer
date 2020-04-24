@@ -1,5 +1,6 @@
 #! /usr/bin/env ruby
 
+require_relative './common/common'
 require_relative './common/types'
 require_relative './instagram/parser'
 require_relative './messages/analyse'

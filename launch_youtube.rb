@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 
-require_relative './common/types'
+require_relative './common/common'
 require_relative './youtube/parser'
-require_relative './messages/analyse'
+require_relative './youtube/analyse'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_history] [output_directory]"
@@ -28,3 +28,5 @@ if File.exists?(index_path)
   end
 end
 index ||= YoutubeParser.parse(path_to_inbox, output_directory)
+
+YoutubeAnalyse.analyse(index, output_directory)

@@ -34,7 +34,7 @@ class YoutubeParser
       views << {
         'url' => view['titleUrl'],
         'title' => view['title'],
-        'date' => DateTime.parse(view['time'])
+        'date' => DateTime.parse(view['time']).to_s
       }
 
       channel_raw['channel_name'] ||= channel_name
