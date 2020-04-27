@@ -1,3 +1,5 @@
+<div align="center"><a href="https://github.com/adrientoub/gdpr_explorer"><img src="https://github.com/adrientoub/gdpr_explorer/blob/master/logo.png" alt="Logo" /></a></div>
+
 # GDPR Explorer
 
 ## Description
