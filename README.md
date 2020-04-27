@@ -67,3 +67,9 @@ Usage: ruby launch_twitter_dm.rb [path_to_dms] [output_directory]
   'path_to_dms' is the path to the Twitter file named 'direct-messages.js'
   'output_directory' is the directory where you want the script to output its work
 ```
+
+```
+Usage: ruby launch_youtube.rb [path_to_history] [output_directory]
+  'path_to_history' is the path to the YouTube file named 'watch-history.json'
+  'output_directory' is the directory where you want the script to output its work
+```
