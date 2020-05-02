@@ -88,3 +88,9 @@ Usage: ruby launch_youtube.rb [path_to_history] [output_directory]
   'path_to_history' is the path to the YouTube file named 'watch-history.json'
   'output_directory' is the directory where you want the script to output its work
 ```
+
+```
+Usage: ruby launch_whatsapp.rb [path_to_input_directory] [output_directory]
+  'path_to_input_directory' is the path to the folder containing all message archives of the form 'WhatsApp Chat'
+  'output_directory' is the directory where you want the script to output its work
+```
