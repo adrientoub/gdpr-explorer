@@ -43,6 +43,19 @@ Go to [guide](https://privacy.apple.com/). Connect with your Apple Account and a
 
 Go to [Google Takeout](https://takeout.google.com/settings/takeout). Select YouTube and YouTube Music, click on "Multiple formats" and pick JSON in the format selector. It usually takes a few minutes to get the archive.
 
+### WhatsApp
+
+For Android [read this guide](https://faq.whatsapp.com/en/android/23756533/?category=5245251).
+
+For iOS [read this guide](https://faq.whatsapp.com/en/iphone/26000285/?category=5245251).
+
+You can only export one chat at a time. To use it with this tool please export all the chats you want to a directory and then extract the archives keeping the directories. You should have something like this:
+
+```
+my chat archives/WhatsApp Chat - Conversation 1/_chat.txt
+my chat archives/WhatsApp Chat - Conversation 2/_chat.txt
+```
+
 ## Requirements
 
 * Ruby 2.5 or more recent
