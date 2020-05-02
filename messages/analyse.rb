@@ -91,7 +91,13 @@ class MessagesAnalyse
     exportable_data = []
     File.open(File.join(output_path, 'message_count.txt'), 'w') do |file|
       conversations_raw.each do |conv_raw|
-        file.puts "#{conv_raw['message_count']} messages - #{conv_raw['title']} (#{conv_raw['reaction_count'] || 0} reactions)"
+        print_reactions = (conv_raw['reaction_count'] || 0) != 0
+
+        if print_reactions
+          file.puts "#{conv_raw['message_count']} messages - #{conv_raw['title']} (#{conv_raw['reaction_count'] || 0} reactions)"
+        else
+          file.puts "#{conv_raw['message_count']} messages - #{conv_raw['title']}"
+        end
         reaction_per_participant = conv_raw['reaction_per_participant']
         conv_raw['message_per_participant'].to_a.sort_by { |participant, count| -count }.each do |participant, message_count|
           different_reaction_count = reaction_per_participant[participant]&.count
@@ -105,7 +111,11 @@ class MessagesAnalyse
               end
             end
           else
-            file.puts "  #{message_count} messages - #{participant} (#{reaction_per_participant.dig(participant, 'total_count') || 0} reactions)"
+            if print_reactions
+              file.puts "  #{message_count} messages - #{participant} (#{reaction_per_participant.dig(participant, 'total_count') || 0} reactions)"
+            else
+              file.puts "  #{message_count} messages - #{participant}"
+            end
           end
         end
         exportable_data << [conv_raw['title'], conv_raw['message_count']]
@@ -142,12 +152,15 @@ class MessagesAnalyse
     File.open(File.join(output_path, 'message_per_month.json'), 'w') do |file|
       file.puts JSON.dump(messages_per_month)
     end
+
+    dates = messages_per_month.keys.sort
+    month_list = generate_all_months(dates[0], dates[-1])
+
     File.open(File.join(output_path, 'message_per_month.csv'), 'w') do |file|
       file.puts "Date#{DELIMITER}#{thread_list.map { |thread_name| CsvExporter.sanitize_data(thread_name, DELIMITER) }.join(DELIMITER)}"
       lines = []
 
-      dates = messages_per_month.keys.sort
-      generate_all_months(dates[0], dates[-1]).each do |date|
+      month_list.each do |date|
         threads = messages_per_month[date] || {}
         res = []
         thread_list.each do |thread|
