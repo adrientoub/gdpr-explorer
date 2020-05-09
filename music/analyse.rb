@@ -39,6 +39,7 @@ class MusicAnalyse
       artist_raw_metadata = {
         'name' => loaded_artist.artist_name,
         'listen_count' => 0,
+        'listen_duration' => 0,
         'listen_per_day' => Hash.new(0),
         'listen_per_hour' => Hash.new(0)
       }
@@ -46,6 +47,7 @@ class MusicAnalyse
 
       loaded_artist.listens.each do |listen|
         artist_raw_metadata['listen_count'] += 1
+        artist_raw_metadata['listen_duration'] += listen.play_duration
         datetime = listen.date.to_s
         date = datetime[0...10]
         hour = datetime[11..12]
@@ -72,14 +74,18 @@ class MusicAnalyse
     exportable_data = []
     File.open(File.join(output_path, 'listen_count.txt'), 'w') do |file|
       artists_raw.each do |art_raw|
-        file.puts "#{art_raw['listen_count']} listens - #{art_raw['name']}"
-        exportable_data << [art_raw['name'], art_raw['listen_count']]
+        duration_time = Time.at(art_raw['listen_duration'] / 1000).utc
+        duration_days = duration_time.strftime('%j').to_i - 1
+        duration_days_print = "#{duration_days} days - " if duration_days > 0
+        duration_print = "#{duration_days_print}#{duration_time.strftime("%H:%M:%S")}"
+        file.puts "#{art_raw['listen_count']} listens - #{art_raw['name']} - #{duration_print}"
+        exportable_data << [art_raw['name'], art_raw['listen_count'], duration_print]
       end
     end
 
     puts "Export view count to CSV."
     File.open(File.join(output_path, 'listen_count.csv'), 'w') do |file|
-      CsvExporter.export_csv(file, exportable_data, %w(name listen_count), DELIMITER)
+      CsvExporter.export_csv(file, exportable_data, %w(name listen_count listen_duration), DELIMITER)
     end
   end
 
