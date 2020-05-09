@@ -2,7 +2,6 @@
 
 require_relative './common/common'
 require_relative './messages/analyse'
-require_relative './messages/types'
 require_relative './whatsapp/parser'
 
 def print_help
@@ -15,10 +14,11 @@ end
 if ARGV.length < 2
   print_help
 end
+force = Common.get_force_from_argv
 
 path_to_input_directory, output_directory = ARGV
 
-index = Common.read_from_index(Common::MESSAGES_TYPE, output_directory)
+index = Common.read_from_index(Common::MESSAGES_TYPE, output_directory) unless force
 index ||= WhatsAppParser.parse(path_to_input_directory, output_directory)
 
-MessagesAnalyse.analyse(index, output_directory)
+MessagesAnalyse.analyse(index, output_directory, force)

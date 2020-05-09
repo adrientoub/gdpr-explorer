@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 
-class YoutubeIndex
+class VideosIndex
   attr_accessor :version, :channels
 
   def self.from_json(json)

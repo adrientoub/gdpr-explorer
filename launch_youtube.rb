@@ -1,8 +1,8 @@
 #! /usr/bin/env ruby
 
 require_relative './common/common'
+require_relative './videos/analyse'
 require_relative './youtube/parser'
-require_relative './youtube/analyse'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_history] [output_directory]"
@@ -14,10 +14,11 @@ end
 if ARGV.length < 2
   print_help
 end
+force = Common.get_force_from_argv
 
 path_to_inbox, output_directory = ARGV
 
-index = Common.read_from_index(Common::VIDEOS_TYPE, output_directory)
+index = Common.read_from_index(Common::VIDEOS_TYPE, output_directory) unless force
 index ||= YoutubeParser.parse(path_to_inbox, output_directory)
 
-YoutubeAnalyse.analyse(index, output_directory)
+VideosAnalyse.analyse(index, output_directory, force)

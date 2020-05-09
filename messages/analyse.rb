@@ -3,8 +3,8 @@ require_relative './types'
 require_relative '../common/csv_exporter'
 
 class MessagesAnalyse
-  def self.analyse(json, output_path)
-    raw_payload = load_or_parse(json, output_path)
+  def self.analyse(json, output_path, force)
+    raw_payload = load_or_parse(json, output_path, force)
     conversations_raw = raw_payload['conversations']
 
     sort!(conversations_raw)
@@ -17,8 +17,8 @@ class MessagesAnalyse
 
   private
 
-  def self.load_or_parse(json, output_path)
-    raw_payload = Common.load_from_cache(Common::MESSAGES_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path)
+  def self.load_or_parse(json, output_path, force)
+    raw_payload = Common.load_from_cache(Common::MESSAGES_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path) unless force
     raw_payload ||= parse(json, output_path)
   end
 

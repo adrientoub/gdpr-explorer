@@ -31,6 +31,15 @@ class Common
     nil
   end
 
+  def self.get_force_from_argv
+    if ARGV.length >= 3
+      if ARGV[2] == '-f' || ARGV[2] == '--force'
+        return true
+      end
+    end
+    return false
+  end
+
   # type is the content type currently handled (messages, videos...)
   def self.required_version(type)
     "#{CURRENT_VERSION}-#{type}"

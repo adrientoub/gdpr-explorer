@@ -3,9 +3,9 @@ require_relative '../common/common'
 require_relative '../common/csv_exporter'
 require_relative './types'
 
-class YoutubeAnalyse
-  def self.analyse(json, output_path)
-    raw_payload = load_or_parse(json, output_path)
+class VideosAnalyse
+  def self.analyse(json, output_path, force)
+    raw_payload = load_or_parse(json, output_path, force)
     channels_raw = raw_payload['channels']
 
     sort!(channels_raw)
@@ -18,13 +18,13 @@ class YoutubeAnalyse
 
   private
 
-  def self.load_or_parse(json, output_path)
-    raw_payload = Common.load_from_cache(Common::VIDEOS_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path)
+  def self.load_or_parse(json, output_path, force)
+    raw_payload = Common.load_from_cache(Common::VIDEOS_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path) unless force
     raw_payload ||= parse(json, output_path)
   end
 
   def self.parse(json, output_path)
-    index = YoutubeIndex.from_json(json)
+    index = VideosIndex.from_json(json)
 
     channels_raw = []
     raw_payload = {
