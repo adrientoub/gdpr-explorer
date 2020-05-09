@@ -6,7 +6,7 @@ require_relative './music/analyse'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_play_activity] [output_directory]"
-  puts "  'path_to_play_activity' is the path to the file named 'Apple-Music-Play-Activity.csv'"
+  puts "  'path_to_play_activity' is the path to the file named 'Apple Music Play Activity.csv'"
   puts "  'output_directory' is the directory where you want the script to output its work"
   exit 1
 end

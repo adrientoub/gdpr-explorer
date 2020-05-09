@@ -94,3 +94,9 @@ Usage: ruby launch_whatsapp.rb [path_to_input_directory] [output_directory]
   'path_to_input_directory' is the path to the folder containing all message archives of the form 'WhatsApp Chat'
   'output_directory' is the directory where you want the script to output its work
 ```
+
+```
+Usage: launch_apple_music.rb [path_to_play_activity] [output_directory]
+  'path_to_play_activity' is the path to the file named 'Apple Music Play Activity.csv'
+  'output_directory' is the directory where you want the script to output its work
+```

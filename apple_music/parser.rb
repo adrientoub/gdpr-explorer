@@ -6,7 +6,7 @@ require 'fileutils'
 require 'json'
 
 class AppleMusicParser
-  # Messages path is the path to the Apple-Music-Play-Activity.csv file
+  # Messages path is the path to the Apple Music Play Activity.csv file
   # Output path is the directory where you want to save your index.json file
   def self.parse(play_activity_path, output_directory)
     index_path = File.join(output_directory, INDEX_PATH)
