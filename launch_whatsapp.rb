@@ -18,7 +18,7 @@ end
 
 path_to_input_directory, output_directory = ARGV
 
-index = Common.read_from_index(output_directory)
+index = Common.read_from_index(Common::MESSAGES_TYPE, output_directory)
 index ||= WhatsAppParser.parse(path_to_input_directory, output_directory)
 
 MessagesAnalyse.analyse(index, output_directory)

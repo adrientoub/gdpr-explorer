@@ -17,7 +17,7 @@ class WhatsAppParser
     conversations_index = []
 
     index = {
-      'version' => CURRENT_VERSION,
+      'version' => Common.required_version(Common::MESSAGES_TYPE),
       'conversations' => conversations_index
     }
 

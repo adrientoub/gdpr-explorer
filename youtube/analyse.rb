@@ -3,8 +3,6 @@ require_relative '../common/common'
 require_relative '../common/csv_exporter'
 require_relative './types'
 
-ANALYSE_CACHE_PATH = 'view_analysed_cache.json'
-
 class YoutubeAnalyse
   def self.analyse(json, output_path)
     raw_payload = load_or_parse(json, output_path)
@@ -21,16 +19,7 @@ class YoutubeAnalyse
   private
 
   def self.load_or_parse(json, output_path)
-    analyse_cache_path = File.join(output_path, ANALYSE_CACHE_PATH)
-    if File.exists?(analyse_cache_path)
-      raw_payload = JSON.parse(File.read(analyse_cache_path))
-      if raw_payload.is_a?(Hash) && raw_payload['version'] != CURRENT_VERSION
-        puts "Found a cache on #{raw_payload['version']}, need #{CURRENT_VERSION}. Reloading."
-        raw_payload = nil
-      else
-        puts "Found a viable cache, reusing it."
-      end
-    end
+    raw_payload = Common.load_from_cache(Common::VIDEOS_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path)
     raw_payload ||= parse(json, output_path)
   end
 
@@ -39,7 +28,7 @@ class YoutubeAnalyse
 
     channels_raw = []
     raw_payload = {
-      'version' => CURRENT_VERSION,
+      'version' => Common.required_version(Common::VIDEOS_TYPE),
       'channels' => channels_raw
     }
 

@@ -2,8 +2,6 @@ require 'json'
 require_relative './types'
 require_relative '../common/csv_exporter'
 
-ANALYSE_CACHE_PATH = 'message_analysed_cache.json'
-
 class MessagesAnalyse
   def self.analyse(json, output_path)
     raw_payload = load_or_parse(json, output_path)
@@ -20,16 +18,7 @@ class MessagesAnalyse
   private
 
   def self.load_or_parse(json, output_path)
-    analyse_cache_path = File.join(output_path, ANALYSE_CACHE_PATH)
-    if File.exists?(analyse_cache_path)
-      raw_payload = JSON.parse(File.read(analyse_cache_path))
-      if raw_payload.is_a?(Hash) && raw_payload['version'] != CURRENT_VERSION
-        puts "Found a cache on #{raw_payload['version']}, need #{CURRENT_VERSION}. Reloading."
-        raw_payload = nil
-      else
-        puts "Found a viable cache, reusing it."
-      end
-    end
+    raw_payload = Common.load_from_cache(Common::MESSAGES_TYPE, ANALYSE_CACHE_PATH, 'analyse', output_path)
     raw_payload ||= parse(json, output_path)
   end
 
@@ -38,7 +27,7 @@ class MessagesAnalyse
 
     conversations_raw = []
     raw_payload = {
-      'version' => CURRENT_VERSION,
+      'version' => Common.required_version(Common::MESSAGES_TYPE),
       'conversations' => conversations_raw
     }
 

@@ -14,7 +14,7 @@ class YoutubeParser
 
     channels_index = []
     index = {
-      'version' => CURRENT_VERSION,
+      'version' => Common.required_version(Common::VIDEOS_TYPE),
       'channels' => channels_index
     }
 
