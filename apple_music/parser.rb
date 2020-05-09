@@ -26,7 +26,12 @@ class AppleMusicParser
     artists_raw = Hash.new { Hash.new }
 
     csv.each do |song|
+      # skip everything that is not a PLAY_END
+      next unless song['Event Type'] == 'PLAY_END'
+
       artist_name = song['Artist Name']
+      # skip songs without artists
+      next if artist_name.nil?
 
       # Do this to allow artists that are split in 2 different Hash
       artist_raw = artists_raw[artist_name]
