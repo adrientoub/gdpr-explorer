@@ -7,6 +7,7 @@ ANALYSE_CACHE_PATH = 'analyse_cache.json'
 
 class Common
   MESSAGES_TYPE = 'messages'
+  MUSIC_TYPE = 'music'
   VIDEOS_TYPE = 'videos'
 
   def self.read_from_index(type, output_directory)
