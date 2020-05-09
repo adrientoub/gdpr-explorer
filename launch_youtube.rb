@@ -17,16 +17,7 @@ end
 
 path_to_inbox, output_directory = ARGV
 
-index_path = File.join(output_directory, INDEX_PATH)
-if File.exists?(index_path)
-  index = JSON.parse(File.read(index_path))
-  if index['version'] != CURRENT_VERSION
-    puts "Found an index on #{index['version']}, need #{CURRENT_VERSION}. Reloading."
-    index = nil
-  else
-    puts "Found a viable index, reusing it."
-  end
-end
+index = Common.read_from_index(output_directory)
 index ||= YoutubeParser.parse(path_to_inbox, output_directory)
 
 YoutubeAnalyse.analyse(index, output_directory)
