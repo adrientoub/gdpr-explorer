@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 require 'fileutils'
-require_relative '../common/types'
+require_relative '../messages/types'
 require_relative './fix_unicode'
 
 class FacebookParser
@@ -16,8 +16,8 @@ class FacebookParser
     conversations_index = []
 
     index = {
-      version: CURRENT_VERSION,
-      conversations: conversations_index
+      'version' => CURRENT_VERSION,
+      'conversations' => conversations_index
     }
 
     children = Dir.children(archive_path)
@@ -33,9 +33,9 @@ class FacebookParser
 
         messages = []
         conv_raw = {
-          conversation_name: nil,
-          participants: nil,
-          messages: messages
+          'conversation_name' => nil,
+          'participants' => nil,
+          'messages' => messages
         }
         output_conversation_path = "conversations/#{conversation_name}.json"
         conversation_directory.each do |message_file|
@@ -49,17 +49,17 @@ class FacebookParser
               json = JSON.parse(content)
             end
 
-            conv_raw[:conversation_name] ||= json['title']
-            conv_raw[:participants] ||= json['participants'].map { |k| k['name'] }
+            conv_raw['conversation_name'] ||= json['title']
+            conv_raw['participants'] ||= json['participants'].map { |k| k['name'] }
             json['messages'].each do |message|
               messages << {
-                sender: message['sender_name'],
-                date: Time.at(message['timestamp_ms'] / 1000).to_datetime.to_s,
-                content: message['content'],
-                reactions: message['reactions']&.map do |reaction|
+                'sender' => message['sender_name'],
+                'date' => Time.at(message['timestamp_ms'] / 1000).to_datetime.to_s,
+                'content' => message['content'],
+                'reactions' => message['reactions']&.map do |reaction|
                   {
-                    sender: reaction['actor'],
-                    reaction: reaction['reaction']
+                    'sender' => reaction['actor'],
+                    'reaction' => reaction['reaction']
                   }
                 end
               }
@@ -71,9 +71,9 @@ class FacebookParser
         end
 
         index_conv = {
-          conversation_name: conv_raw[:conversation_name],
-          path: output_conversation_path,
-          message_count: conv_raw[:messages].count
+          'conversation_name' => conv_raw['conversation_name'],
+          'path' => output_conversation_path,
+          'message_count' => conv_raw['messages'].count
         }
         conversations_index << index_conv
       end

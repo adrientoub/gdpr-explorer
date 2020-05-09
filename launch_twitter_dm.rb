@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 
 require_relative './common/common'
-require_relative './common/types'
 require_relative './twitter/parser'
 require_relative './messages/analyse'
+require_relative './messages/types'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_dms] [output_directory]"

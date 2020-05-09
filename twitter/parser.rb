@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 require 'fileutils'
-require_relative '../common/types'
+require_relative '../messages/types'
 
 class TwitterParser
   # Messages path is the path to the direct-messages.js file

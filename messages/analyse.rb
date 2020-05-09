@@ -1,5 +1,5 @@
 require 'json'
-require_relative '../common/types'
+require_relative './types'
 require_relative '../common/csv_exporter'
 
 ANALYSE_CACHE_PATH = 'message_analysed_cache.json'
@@ -34,7 +34,7 @@ class MessagesAnalyse
   end
 
   def self.parse(json, output_path)
-    index = Index.from_json(json)
+    index = MessagesIndex.from_json(json)
 
     conversations_raw = []
     raw_payload = {

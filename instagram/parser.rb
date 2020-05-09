@@ -3,7 +3,6 @@
 require 'json'
 require 'date'
 require 'fileutils'
-require_relative '../common/types'
 
 class InstagramParser
   # Messages path is the path to the messages.json file

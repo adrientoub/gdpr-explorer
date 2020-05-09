@@ -1,7 +1,7 @@
 require 'json'
 require 'date'
 
-class Index
+class MessagesIndex
   attr_accessor :version, :conversations
 
   def self.from_json(json)

@@ -1,7 +1,6 @@
 require 'json'
 require 'date'
 require 'fileutils'
-require_relative '../common/types'
 
 class YoutubeParser
   # History path is the path to the watch-history.json file

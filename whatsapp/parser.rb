@@ -2,7 +2,6 @@ require 'json'
 require 'date'
 require 'set'
 require 'fileutils'
-require_relative '../common/types'
 
 class WhatsAppParser
   DIRECTORY_PREFIX = 'WhatsApp Chat - '

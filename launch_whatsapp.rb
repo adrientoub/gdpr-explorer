@@ -1,9 +1,9 @@
 #! /usr/bin/env ruby
 
 require_relative './common/common'
-require_relative './common/types'
-require_relative './whatsapp/parser'
 require_relative './messages/analyse'
+require_relative './messages/types'
+require_relative './whatsapp/parser'
 
 def print_help
   puts "Usage: #{__FILE__ } [path_to_input_directory] [output_directory]"
