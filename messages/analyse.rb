@@ -13,6 +13,7 @@ class MessagesAnalyse
     export_messages_per_month(conversations_raw, output_path)
     export_messages_per_hour(conversations_raw, output_path)
     export_messages_per_day_of_week(conversations_raw, output_path)
+    export_yearly_rewind(conversations_raw, output_path)
   end
 
   private
@@ -28,7 +29,7 @@ class MessagesAnalyse
     conversations_raw = []
     raw_payload = {
       'version' => Common.required_version(Common::MESSAGES_TYPE),
-      'conversations' => conversations_raw
+      'conversations' => conversations_raw,
     }
 
     index.conversations.each do |conversation|
@@ -41,23 +42,39 @@ class MessagesAnalyse
         'message_per_participant' => Hash.new(0),
         'reaction_per_participant' => {},
         'message_per_day' => Hash.new(0),
-        'message_per_hour' => Hash.new(0)
+        'message_per_day_per_participant' => Hash.new { |hash, key|
+          hash[key] = Hash.new(0)
+        },
+        'message_per_hour' => Hash.new(0),
+        'message_per_year' => Hash.new { |hash, key|
+          hash[key] = {
+            'message_per_participant' => Hash.new(0),
+            'reaction_per_participant' => {},
+          }
+        }
       }
       conversations_raw << conv_raw_metadata
 
       loaded_conversation.messages.each do |message|
         conv_raw_metadata['message_count'] += 1
+        datetime = message.date.to_s
+        date = datetime[0...10]
+        hour = datetime[11..12]
+        year = datetime[0...4]
+
         conv_raw_metadata['message_per_participant'][message.sender] += 1
+        conv_raw_metadata['message_per_year'][year]['message_per_participant'][message.sender] += 1
         message.reactions&.each do |reaction|
           conv_raw_metadata['reaction_count'] += 1
+          conv_raw_metadata['message_per_year'][year]['reaction_per_participant'][reaction.sender] ||= Hash.new(0)
+          conv_raw_metadata['message_per_year'][year]['reaction_per_participant'][reaction.sender]['total_count'] += 1
+          conv_raw_metadata['message_per_year'][year]['reaction_per_participant'][reaction.sender][reaction.reaction] += 1
           conv_raw_metadata['reaction_per_participant'][reaction.sender] ||= Hash.new(0)
           conv_raw_metadata['reaction_per_participant'][reaction.sender]['total_count'] += 1
           conv_raw_metadata['reaction_per_participant'][reaction.sender][reaction.reaction] += 1
         end
-        datetime = message.date.to_s
-        date = datetime[0...10]
-        hour = datetime[11..12]
         conv_raw_metadata['message_per_day'][date] += 1
+        conv_raw_metadata['message_per_day_per_participant'][date][message.sender] += 1
         conv_raw_metadata['message_per_hour']["h#{hour}"] += 1
       end
     end
@@ -115,6 +132,96 @@ class MessagesAnalyse
     File.open(File.join(output_path, 'message_count.csv'), 'w') do |file|
       CsvExporter.export_csv(file, exportable_data, %w(conversation_name message_count), DELIMITER)
     end
+  end
+
+  def self.export_yearly_rewind(conversations_raw, output_path)
+    exportable_data = []
+    message_per_person_per_year = Hash.new { |hash, key|
+      hash[key] = Hash.new(0)
+    }
+    reaction_per_person_per_year = Hash.new { |hash, key|
+      hash[key] = Hash.new { |h, k|
+        h[k] = Hash.new(0)
+      }
+    }
+
+    # Find out who the dumps is from by finding out who is in all conversations
+    person_per_conversation = Hash.new(0)
+    conversations_raw.each do |conv_raw|
+      conv_raw['participants'].each do |p|
+        person_per_conversation[p] += 1
+      end
+    end
+    user_name = person_per_conversation.to_a.sort_by(&:last).last.first
+
+    message_per_day = Hash.new(0)
+    received_message_per_day = Hash.new(0)
+    sent_message_per_day = Hash.new(0)
+
+    conversations_raw.each do |conv_raw|
+      conv_raw['message_per_day'].each do |day, count|
+        message_per_day[day] += count
+        received_message_per_day[day] += count - (conv_raw.dig('message_per_day_per_participant', day, user_name) || 0)
+        sent_message_per_day[day] += (conv_raw.dig('message_per_day_per_participant', day, user_name) || 0)
+      end
+
+      conv_raw['message_per_year'].each do |year, mpy|
+        mpy['message_per_participant'].each do |participant, count|
+          message_per_person_per_year[year][participant] += count
+        end
+        mpy['reaction_per_participant'].each do |participant, counts|
+          counts.each do |count_name, count|
+            reaction_per_person_per_year[year][participant][count_name] += count
+          end
+        end
+      end
+    end
+    File.open(File.join(output_path, 'message_per_person_per_year.json'), 'w') do |file|
+      file.puts JSON.dump(message_per_person_per_year)
+    end
+    File.open(File.join(output_path, 'reaction_per_person_per_year.json'), 'w') do |file|
+      file.puts JSON.dump(reaction_per_person_per_year)
+    end
+
+    message_per_person_per_year.each do |year, person_count|
+      reactions = Hash.new(0)
+      reaction_per_person_per_year[year].each do |_, counts|
+        counts.each do |react, cnt|
+          reactions[react] += cnt
+        end
+      end
+      reactions = reactions.to_a.sort_by { |a| -a[1] }.map(&:first)
+
+      File.open(File.join(output_path, "message_#{year}.csv"), 'w') do |file|
+        file.puts "Name#{DELIMITER}Count#{DELIMITER}#{reactions.join(DELIMITER)}"
+        person_count.to_a.sort_by { |a| -a[1] }.each do |a|
+          s = ''
+          reactions.each do |r|
+            s += "#{DELIMITER}#{reaction_per_person_per_year[year][a[0]][r]}"
+          end
+          file.puts "#{a[0]}#{DELIMITER}#{a[1]}#{s}"
+        end
+      end
+    end
+
+    last_year = message_per_person_per_year.keys.to_a.sort[-1]
+    puts "In #{last_year} you (#{user_name})"
+    puts "* Received messages from #{message_per_person_per_year[last_year].count} persons"
+    sent_message_count = message_per_person_per_year[last_year][user_name]
+    puts "* Sent #{sent_message_count} messages"
+    received_messages = message_per_person_per_year[last_year].sum { |k, v| v } - sent_message_count
+    puts "* Received #{received_messages} messages"
+    biggest_day = message_per_day.sort_by { |k, v| -v }.find { |k, v| k.include?(last_year) }
+    puts "* The biggest day of your year was #{biggest_day.first} where you received/sent #{biggest_day.last} messages"
+    biggest_day_received = received_message_per_day.sort_by { |k, v| -v }.find { |k, v| k.include?(last_year) }
+    puts "* The day when you received the most messages was #{biggest_day_received.first} where you received #{biggest_day_received.last} messages"
+    biggest_day_sent = sent_message_per_day.sort_by { |k, v| -v }.find { |k, v| k.include?(last_year) }
+    puts "* The day when you sent the most messages of your year was #{biggest_day_sent.first} where you sent #{biggest_day_sent.last} messages"
+    puts
+    # Keep 5 best friends by taking the top 6 persons who sent messages and removing the name of the current user
+    best_friends = message_per_person_per_year[last_year].to_a.sort_by(&:last).last(6).reverse.map(&:first)
+    best_friends.delete(user_name)
+    puts "The persons who sent you the most messages were #{best_friends.join(', ')}"
   end
 
   def self.export_messages_per_month(conversations_raw, output_path)
